@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import Homes from "./pages/Homes";
 import Devices from "./pages/Devices";
 import Users from "./pages/Users";
+import Permissions from "./pages/Permissions";
+
 
 export default function App() {
   return (
@@ -9,7 +11,8 @@ export default function App() {
       <nav style={{ padding: 12, borderBottom: "1px solid #ccc" }}>
         <Link to="/homes">Homes</Link>{" | "}
         <Link to="/devices">Devices</Link>{" | "}
-        <Link to="/users">Users</Link>
+        <Link to="/users">Users</Link>{" | "}
+        <Link to="/permissions">Permissions</Link>
       </nav>
 
       <Routes>
@@ -17,7 +20,9 @@ export default function App() {
         <Route path="/homes" element={<Homes />} />
         <Route path="/devices" element={<Devices />} />
         <Route path="/users" element={<Users />} />
+        <Route path="/permissions" element={<Permissions />} />
       </Routes>
     </BrowserRouter>
   );
 }
+
