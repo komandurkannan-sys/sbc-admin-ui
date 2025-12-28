@@ -16,10 +16,12 @@ async function post(body) {
   }
 }
 
+// ---------- Homes ----------
 export function listHomes() {
   return post({ action: "listHomes" });
 }
 
+// ---------- Devices ----------
 export function listDevices(homeId) {
   return post({ action: "listDevices", homeId });
 }
@@ -28,14 +30,25 @@ export function syncDevices(homeId) {
   return post({ action: "syncDevices", homeId });
 }
 
+// ---------- Users ----------
 export function listUsers(homeId) {
   return post({ action: "listUsers", homeId });
 }
 
 export function upsertUser(payload) {
-  return post({ action: "upsertUser", ...payload, create: true });
+  return post({
+    action: "upsertUser",
+    ...payload,
+    create: !payload.user_code
+  });
 }
 
+export function deleteUser(payload) {
+  // payload: { homeId, user_code }
+  return post({ action: "deleteUser", ...payload });
+}
+
+// ---------- Permissions ----------
 export function setPermissions(payload) {
   return post({ action: "setPermissions", ...payload });
 }
