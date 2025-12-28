@@ -1,94 +1,72 @@
 import { useEffect, useState } from "react";
-import { listHomes } from "../api/adminApi";
+import { listHomes, listUsers, upsertUser } from "../api/adminApi";
 
 export default function Users() {
   const [homes, setHomes] = useState([]);
+  const [homeId, setHomeId] = useState("");
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({
-    userId: "",
-    userName: "",
-    role: "MEMBER",
-    homeId: ""
+    personId: "",
+    personName: ""
   });
 
+  // helper to read DynamoDB attributes
+  const val = v => (v && v.S) || "";
+
   useEffect(() => {
-    listHomes().then(r => setHomes(r.items || []));
+    listHomes().then(r => {
+      setHomes(r.items || []);
+    });
   }, []);
 
-  const addUser = () => {
-    if (!form.userId || !form.userName || !form.homeId) {
-      alert("All fields are required");
+  useEffect(() => {
+    if (!homeId) {
+      setUsers([]);
       return;
     }
-    setUsers([...users, form]);
-    setForm({ userId: "", userName: "", role: "MEMBER", homeId: "" });
-  };
+    listUsers(homeId).then(r => {
+      setUsers(r.items || []);
+    });
+  }, [homeId]);
+
+  async function addUser() {
+    if (!form.personId || !form.personName || !homeId) {
+      alert("All fields required");
+      return;
+    }
+
+    const r = await upsertUser({
+      homeId,
+      personId: form.personId,
+      personName: form.personName
+    });
+
+    if (!r.ok) {
+      alert(r.error);
+      return;
+    }
+
+    setForm({ personId: "", personName: "" });
+
+    const u = await listUsers(homeId);
+    setUsers(u.items || []);
+  }
 
   return (
     <div style={{ padding: 16, maxWidth: 600 }}>
       <h2>Users</h2>
 
       <label>
-        <strong>User ID</strong>
-        <div style={{ fontSize: 12, color: "#666" }}>
-          Amazon / Alexa generated userId (e.g. amzn1.ask.account.…)
-        </div>
-        <input
-          style={{ width: "100%" }}
-          value={form.userId}
-          onChange={e => setForm({ ...form, userId: e.target.value })}
-          placeholder="amzn1.ask.account.…"
-        />
-      </label>
-
-      <br /><br />
-
-      <label>
-        <strong>User Name</strong>
-        <div style={{ fontSize: 12, color: "#666" }}>
-          Friendly name for admin reference only
-        </div>
-        <input
-          style={{ width: "100%" }}
-          value={form.userName}
-          onChange={e => setForm({ ...form, userName: e.target.value })}
-          placeholder="Kannan / Guest / Child"
-        />
-      </label>
-
-      <br /><br />
-
-      <label>
-        <strong>Role</strong>
-        <div style={{ fontSize: 12, color: "#666" }}>
-          OWNER = full access, MEMBER = restricted by permissions
-        </div>
-        <select
-          style={{ width: "100%" }}
-          value={form.role}
-          onChange={e => setForm({ ...form, role: e.target.value })}
-        >
-          <option value="OWNER">OWNER</option>
-          <option value="MEMBER">MEMBER</option>
-        </select>
-      </label>
-
-      <br /><br />
-
-      <label>
         <strong>Home</strong>
-        <div style={{ fontSize: 12, color: "#666" }}>
-          Home this user belongs to
-        </div>
         <select
           style={{ width: "100%" }}
-          value={form.homeId}
-          onChange={e => setForm({ ...form, homeId: e.target.value })}
+          value={homeId}
+          onChange={e => setHomeId(e.target.value)}
         >
           <option value="">Select home</option>
           {homes.map(h => (
-            <option key={h.homeId.S} value={h.homeId.S}>
-              {h.homeName.S}
+            <option key={val(h.homeId)} value={val(h.homeId)}>
+              {val(h.homeName)}
             </option>
           ))}
         </select>
@@ -96,16 +74,48 @@ export default function Users() {
 
       <br /><br />
 
-      <button onClick={addUser}>Add User</button>
+      <label>
+        <strong>User ID</strong>
+        <div style={{ fontSize: 12, color: "#666" }}>
+          Alexa personId
+        </div>
+        <input
+          style={{ width: "100%" }}
+          value={form.personId}
+          onChange={e => setForm({ ...form, personId: e.target.value })}
+        />
+      </label>
+
+      <br /><br />
+
+      <label>
+        <strong>User Name</strong>
+        <input
+          style={{ width: "100%" }}
+          value={form.personName}
+          onChange={e => setForm({ ...form, personName: e.target.value })}
+        />
+      </label>
+
+      <br /><br />
+
+      <button onClick={addUser} disabled={!homeId}>
+        Add MEMBER
+      </button>
 
       <hr />
 
       <ul>
-        {users.map((u, i) => (
-          <li key={i}>
-            {u.userName} — {u.role}
-          </li>
-        ))}
+        {users
+          .filter(u => val(u.personId) !== "__TABLE__")
+          .map((u, i) => (
+            <li key={i} style={{ marginBottom: 8 }}>
+              <div>{val(u.personName)}</div>
+              <div style={{ fontSize: 11, color: "#888" }}>
+                {val(u.personId)}
+              </div>
+            </li>
+          ))}
       </ul>
     </div>
   );

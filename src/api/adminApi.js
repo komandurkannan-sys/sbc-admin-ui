@@ -1,46 +1,41 @@
 const BASE_URL = "https://clrhkahumi.execute-api.eu-west-1.amazonaws.com/dev";
 
-export async function listHomes() {
+async function post(body) {
   const res = await fetch(`${BASE_URL}/admin`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "listHomes" })
+    body: JSON.stringify(body)
   });
-  return res.json();
+
+  const text = await res.text();
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { ok: false, error: text };
+  }
 }
 
-export async function listDevices(homeId) {
-  const res = await fetch(`${BASE_URL}/admin`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "listDevices", homeId })
-  });
-  return res.json();
+export function listHomes() {
+  return post({ action: "listHomes" });
 }
 
-export async function syncDevices(homeId) {
-  const res = await fetch(`${BASE_URL}/admin`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "syncDevices", homeId })
-  });
-  return res.json();
+export function listDevices(homeId) {
+  return post({ action: "listDevices", homeId });
 }
 
-export async function listUsers() {
-  const res = await fetch(`${BASE_URL}/admin`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "listUsers" })
-  });
-  return res.json();
+export function syncDevices(homeId) {
+  return post({ action: "syncDevices", homeId });
 }
 
-export async function setPermissions(payload) {
-  const res = await fetch(`${BASE_URL}/admin`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "setPermissions", ...payload })
-  });
-  return res.json();
+export function listUsers(homeId) {
+  return post({ action: "listUsers", homeId });
+}
+
+export function upsertUser(payload) {
+  return post({ action: "upsertUser", ...payload, create: true });
+}
+
+export function setPermissions(payload) {
+  return post({ action: "setPermissions", ...payload });
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { listHomes } from "../api/adminApi";
 
+
 export default function Homes() {
   const [homes, setHomes] = useState([]);
   const [error, setError] = useState(null);
